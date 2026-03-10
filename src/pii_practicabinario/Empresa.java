@@ -23,7 +23,8 @@ public class Empresa {
             System.out.println("3. Agregar venta a empleado");
             System.out.println("4. Pagar Empleado");
             System.out.println("5. Despedir Empleado");
-            System.out.println("6. Salir");
+            System.out.println("6. Reporte de Empleado");
+            System.out.println("7. Salir");
             System.out.println("Escoja una opcion: ");
             try {
                 opcion = lea.nextInt();
@@ -46,24 +47,28 @@ public class Empresa {
                         int code = lea.nextInt();
                         System.out.println("Ingrese el saldo:");
                         double saldo = lea.nextDouble();
-                        System.out.println("Ingrese el mes:");
-			int mes= lea.nextInt(); 
-                        manager.addVenta(code,mes, saldo);
+                        manager.AddSale(code, saldo);
                         break;
                     }
                     case 4: {
                         System.out.println("Ingrese el codigo del empleado:");
                         int code = lea.nextInt();
-                        manager.pagarEmpleado(code);
+                        manager.payEmployee(code);
                         break;
                     }
                     case 5: {
                         System.out.println("Ingrese el codigo del empleado");
                         int code = lea.nextInt();
-                        manager.despedirEmpleado(code);
+                        manager.fireEmployee(code);
                         break;
                     }
                     case 6: {
+                        System.out.println("Ingrese el codigo del empleado:");
+                        int code = lea.nextInt();
+                        manager.printEmployee(code);
+                        break;
+                    }
+                    case 7: {
                         manager.cerrar();
                         break;
                     }
@@ -76,7 +81,7 @@ public class Empresa {
                 System.out.println("Error: " + e.getMessage());
             }
 
-        } while (opcion != 6);
+        } while (opcion != 7);
                 
     }
 }

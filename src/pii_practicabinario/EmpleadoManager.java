@@ -7,6 +7,7 @@ package pii_practicabinario;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -129,6 +130,7 @@ public class EmpleadoManager {
             remps.readUTF();
             remps.skipBytes(16);
             if(remps.readLong()==0 && cod==code){
+                remps.seek(pos);
                 return true;
             }
         }
@@ -154,116 +156,102 @@ public class EmpleadoManager {
             double monto= sales.readDouble();
             sales.seek(pos);
             sales.writeDouble(ven+monto);
-            
+            sales.close();
         }
-        System.out.println("");
-        return;
+        System.out.println("No se pudo agregar la venta");
+    }
+    //recibo
+    
+    private boolean isEmployeePayed(int code) throws IOException{
+        RandomAccessFile rventas = salesFileFor(code);
+        int posicion = (Calendar.getInstance().get(Calendar.MONTH) * 9);
+        rventas.seek(posicion);
+        rventas.skipBytes(8);
+        boolean pagado =rventas.readBoolean();
+        rventas.close();
+        if (pagado) {
+            return true;
+        }
+        return false;
     }
     
-    /*
-    private boolean isDespedido(int code) throws IOException {
-        remps.seek(0);
-        while (remps.getFilePointer() < remps.length()) {
-            int codigo = remps.readInt();
-            remps.readUTF();
-            remps.skipBytes(16);
-            long fechaD = remps.readLong();
-            if (codigo == code) {
-                if (fechaD == 0) {
-                    return false;
-                }else{
-                    System.out.println("Este empleado esta despedido");
-                    return true;
-                }
-            }
-        }
-        System.out.println("Este empleado no existe");
-        return true ;
+    private RandomAccessFile billsFilefor(int code) throws IOException {
+        String padre = employesFolder(code);
+        String direccion = padre + "/recibos.emp";
+        return new RandomAccessFile(direccion, "rw");
     }
-
-    public void addVenta(int code, int mes, double saldo) throws IOException {
-        if (isDespedido(code)) {
-            return;
-        }
-
-        if(mes<1 ||mes>12){
-            System.out.println("Mes invalido");
-            return;
-        }
-        
-        RandomAccessFile rventas = salesFileFor(code);
-        int posicion = ((mes - 1) * 9);
-        rventas.seek(posicion);
-        double saldoAnterior = rventas.readDouble();
-        rventas.seek(posicion);
-        rventas.writeDouble(saldoAnterior + saldo);
-        rventas.close();
-        System.out.println("Venta agregada con exito");
-    }
-
-    public void pagarEmpleado(int code) throws IOException{
-        if (isDespedido(code)) {
-            return;
-        }
-
-        remps.seek(0);
-        double salarioBase = 0;
-        while (remps.getFilePointer() < remps.length()) {
-            int codigo = remps.readInt();
-            remps.readUTF();
-            if (codigo == code) {
-                salarioBase = remps.readDouble();
-                break;
-            } else {
-                remps.skipBytes(24);
-            }
-        }
-
-        RandomAccessFile rventas = salesFileFor(code);
-        int mes = Calendar.getInstance().get(Calendar.MONTH);
-        int posicion = ((mes) * 9);
-        rventas.seek(posicion);
-        double monto = rventas.readDouble();
-        boolean pagado = rventas.readBoolean();
-        if (pagado) {
-            System.out.println("Ya se le pago este mes");
+    
+    public void payEmployee(int code) throws IOException{
+        if (isEmployeeActive(code) && !isEmployeePayed(code)) {
+            String nombre=remps.readUTF();
+            double salarioBase = remps.readDouble();
+            
+            RandomAccessFile rventas = salesFileFor(code);
+            int mesActual =Calendar.getInstance().get(Calendar.MONTH);
+            int anioActual= Calendar.getInstance().get(Calendar.YEAR);
+            int posicion = (mesActual * 9);
+            
+            rventas.seek(posicion);
+            double ventas = rventas.readDouble();
+            rventas.seek(posicion + 8);
+            rventas.writeBoolean(true);
             rventas.close();
-            return;
-        }
-        rventas.seek(posicion + 8);
-        rventas.writeBoolean(true);
-        rventas.close();
-        double comision = monto * 0.10;
-        double total = salarioBase + comision;
-        System.out.println("Se le pago al Empleado con codigo #" + code + " un total de $" + total);
-        System.out.println("Total ventas: $" + monto + "  Comision: $" + comision);
-
+            
+            double sueldo = salarioBase + (ventas*0.10);
+            double deduccion= sueldo*0.035;
+            double total=sueldo-deduccion;
+            
+            RandomAccessFile recibos= billsFilefor(code);
+            recibos.seek(recibos.length());
+            recibos.writeLong(new Date().getTime());
+            recibos.writeDouble(sueldo);
+            recibos.writeDouble(deduccion);
+            recibos.writeInt(anioActual);
+            recibos.writeInt(mesActual+1);
+            recibos.close();
+    
+            System.out.println("Empleado "+nombre+ " se le pago Lps." + total);
+        }else{
+            System.out.println("No se pudo pagar");
+        } 
     }
 
-    public void despedirEmpleado(int code) throws IOException {
-        if (isDespedido(code)) {
-            return;
-        }
-
-        remps.seek(0);
-        while (remps.getFilePointer() < remps.length()) {
-            int codigoEmp = remps.readInt();
-            remps.readUTF();
-            remps.skipBytes(16);
-            if (codigoEmp == code) {
-                remps.writeLong(Calendar.getInstance().getTimeInMillis());
-                System.out.println("Empleado despedido");
-                return;
-            } else {
-                remps.skipBytes(8);
+    public void printEmployee(int code) throws IOException{
+        if(isEmployeeActive(code)){
+            String nombre=remps.readUTF();
+            double salario = remps.readDouble();
+            Date fechaContratacion= new Date(remps.readLong());
+            SimpleDateFormat formato= new SimpleDateFormat("MM/dd/yy");
+            System.out.println("Codigo: "+code+""
+                                + "\nNombre: "+nombre+""
+                                + "\nSalario: "+salario+""
+                                + "\nFecha de contratacion: "+formato.format(fechaContratacion));
+            
+            RandomAccessFile rventas = salesFileFor(code);
+            rventas.seek(0);
+            double suma=0;
+            for(int mes=1; mes <= 12; mes++){
+                double monto= rventas.readDouble();
+                rventas.skipBytes(1);
+                System.out.println("Mes "+mes+": "+monto);
+                suma+=monto;
             }
+            System.out.println("Total de ventas del año: "+suma);
+            
+            RandomAccessFile recibos = billsFilefor(code);
+            int totalRecibos=0;
+            recibos.seek(0);
+            while (recibos.getFilePointer() < recibos.length()){
+                recibos.skipBytes(32);
+                totalRecibos++;
+            }
+            System.out.println("Total de pagos realizados: "+totalRecibos);
         }
     }
-
     public void cerrar() throws IOException {
         remps.close();
         rcodes.close();
 
-    }*/
+    }
 }
 
