@@ -59,7 +59,9 @@ public class Empresa {
                     case 5: {
                         System.out.println("Ingrese el codigo del empleado");
                         int code = lea.nextInt();
-                        manager.fireEmployee(code);
+                        if(!manager.fireEmployee(code)){
+                            System.out.println("No se pudo despedir al empleado");
+                        }
                         break;
                     }
                     case 6: {

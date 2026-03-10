@@ -157,8 +157,9 @@ public class EmpleadoManager {
             sales.seek(pos);
             sales.writeDouble(ven+monto);
             sales.close();
+        }else{
+            System.out.println("No se pudo agregar la venta");
         }
-        System.out.println("No se pudo agregar la venta");
     }
     //recibo
     
@@ -169,10 +170,7 @@ public class EmpleadoManager {
         rventas.skipBytes(8);
         boolean pagado =rventas.readBoolean();
         rventas.close();
-        if (pagado) {
-            return true;
-        }
-        return false;
+        return pagado;
     }
     
     private RandomAccessFile billsFilefor(int code) throws IOException {
@@ -236,6 +234,7 @@ public class EmpleadoManager {
                 System.out.println("Mes "+mes+": "+monto);
                 suma+=monto;
             }
+            rventas.close();
             System.out.println("Total de ventas del año: "+suma);
             
             RandomAccessFile recibos = billsFilefor(code);
@@ -245,7 +244,10 @@ public class EmpleadoManager {
                 recibos.skipBytes(32);
                 totalRecibos++;
             }
+            recibos.close();
             System.out.println("Total de pagos realizados: "+totalRecibos);
+        }else{
+            System.out.println("Este empleado no existe o esta despedido");
         }
     }
     public void cerrar() throws IOException {
