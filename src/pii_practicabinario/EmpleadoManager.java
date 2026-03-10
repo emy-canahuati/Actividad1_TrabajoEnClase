@@ -211,7 +211,7 @@ public class EmpleadoManager {
             recibos.writeInt(mesActual+1);
             recibos.close();
     
-            System.out.println("Empleado "+nombre+ " se le pago Lps." + total);
+            System.out.println("Empleado "+nombre+ " se le pago Lps." + String.format("%.2f", total));
         }else{
             System.out.println("No se pudo pagar");
         } 
