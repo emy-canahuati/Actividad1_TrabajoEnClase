@@ -60,7 +60,7 @@ public class Empresa {
                         System.out.println("Ingrese el codigo del empleado");
                         int code = lea.nextInt();
                         if(!manager.fireEmployee(code)){
-                            System.out.println("No se pudo despedir al empleado");
+                            System.out.println("No se pudo despedir al empleado. El empleado no existe o esta despedido.");
                         }
                         break;
                     }
@@ -74,11 +74,13 @@ public class Empresa {
                         manager.cerrar();
                         break;
                     }
+                    default:
+                        System.out.println("Error: ingrese una opcion valida");
+                        break;
                 }
             } catch (InputMismatchException e) {
                 System.out.println("Error: ingrese una opcion valida");
-            } catch (NullPointerException e) {
-                System.out.println("Error: debe agregar empleados primero");
+                lea.nextLine();
             } catch (Exception e) {
                 System.out.println("Error: " + e.getMessage());
             }

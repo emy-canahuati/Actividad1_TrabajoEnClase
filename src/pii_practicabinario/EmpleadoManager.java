@@ -108,6 +108,9 @@ public class EmpleadoManager {
     }
 
     public void employeesList() throws IOException {
+        if(remps.length()==0){
+            System.out.println("No hay empleados registrados");
+        }
         remps.seek(0);
         int listado = 1;
         while (remps.getFilePointer() < remps.length()) {
@@ -116,7 +119,7 @@ public class EmpleadoManager {
             double salario = remps.readDouble();
             Date fechaContratacion = new Date(remps.readLong());
             if (remps.readLong() == 0) {
-                System.out.println(listado + ". " + code + "-" + name + "- $" + salario + "-" + fechaContratacion.toString());
+                System.out.println(listado + ". " + code + "-" + name + "- Lps." + salario + "-" + fechaContratacion.toString());
                 listado++;
             }
         }
@@ -158,7 +161,7 @@ public class EmpleadoManager {
             sales.writeDouble(ven+monto);
             sales.close();
         }else{
-            System.out.println("No se pudo agregar la venta");
+            System.out.println("No se pudo agregar la venta. El empleado no existe o esta despedido.");
         }
     }
     //recibo
@@ -219,7 +222,7 @@ public class EmpleadoManager {
             String nombre=remps.readUTF();
             double salario = remps.readDouble();
             Date fechaContratacion= new Date(remps.readLong());
-            SimpleDateFormat formato= new SimpleDateFormat("MM/dd/yy");
+            SimpleDateFormat formato= new SimpleDateFormat("dd/MM/yy");
             System.out.println("Codigo: "+code+""
                                 + "\nNombre: "+nombre+""
                                 + "\nSalario: "+salario+""
